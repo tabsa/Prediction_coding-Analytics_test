@@ -8,6 +8,10 @@ from forecast import windForecast # Class with the forecast techniques for this 
 analyTestFiles = ['features', 'target'] # Files with explanatory variables (features) and response variables (target)
 analyTestForcast = windForecast(analyTestFiles, 144)
 # First check for non stationarity trends
+# Check stationary properties in both time series - features and target
+for i in range(analyTestForcast.noVendor):
+    analyTestForcast.statioInfo[i] = analyTestForcast.checkStaionarity(analyTestForcast.features[i])  # Feature time series of vendor i
+analyTestForcast.statioInfo[i + 1] = analyTestForcast.checkStaionarity(analyTestForcast.target[0])  # Target time series
 print('Results of Dickey-Fuller Test:')
 print(analyTestForcast.statioInfo)
 
@@ -15,6 +19,8 @@ print(analyTestForcast.statioInfo)
 pd.plotting.lag_plot(analyTestForcast.target[0])
 plt.show()
 plot_acf(analyTestForcast.target[0])
+plt.ylabel('Correlation factor [0-1]')
+plt.xlabel('Lab variables')
 plt.show()
 
 # Third create the linear regression model - LS estimator
@@ -32,4 +38,16 @@ print(analyTestForcast.linRegModel[['R2_score', 'MAE_score', 'RMSE_score']].desc
 analyTestForcast.linRegModel[['R2_score', 'MAE_score', 'RMSE_score']].boxplot()
 # Plot the prediction of wind production
 analyTestForcast.target.plot()
+plt.ylabel('Energy [MWh]')
+plt.xlabel('Time [30min]')
+plt.show()
+
+# See Avg weekly production
+analyTarget = analyTestForcast.target.resample('60min').sum()
+weekTarget = analyTarget['2019-01-14':'2019-10-27'].resample('168h').sum()
+print('Average weekly production: %.2f MWh' %weekTarget[0].mean())
+print('Wind production seasonality')
+weekTarget.plot()
+plt.ylabel('Weekly Energy [MWh]')
+plt.xlabel('Time [Week]')
 plt.show()
